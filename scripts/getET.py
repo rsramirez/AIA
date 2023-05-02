@@ -3,7 +3,7 @@
 
 __author__ = "R. Sanchez-Ramirez"
 __created__ = "2023-05-02 17:38:13"
-__updated__ = "2023-05-02 17:38:27"
+__updated__ = "2023-05-02 18:08:34"
 
 import argparse
 import dynesty
@@ -427,54 +427,56 @@ if args['command'] == 'prep':
 
     sys.exit()
 
-print('Procesando el ficheros %s...' % (args['lambda1'],))
+if args['command'] == 'fit':
 
-table1 = openFile(args['lambda1'])
-band1 = table1.meta['filter']
-# table2 = openFile(args['filel2'])
-table2 = Table.read('campos.fit', format='fits')
-# band2 = table2.meta['filter']
-band2 = args['lambda2']
+    print('Procesando el ficheros %s...' % (args['lambda1'],))
 
-table = join(table1, table2, join_type='inner', keys='Id',
-             metadata_conflicts='silent')
+    table1 = openFile(args['lambda1'])
+    band1 = table1.meta['filter']
+    # table2 = openFile(args['filel2'])
+    table2 = Table.read('campos.fit', format='fits')
+    # band2 = table2.meta['filter']
+    band2 = args['lambda2']
 
-table.sort('X')
+    table = join(table1, table2, join_type='inner', keys='Id',
+                 metadata_conflicts='silent')
 
-print('Calculando las ecs. de transformación para el filtro %s' % band1)
-print('con el color (%s - %s)...' % (band1, band2))
+    table.sort('X')
 
-Id = table['Id'].data
-X = table['X'].data
+    print('Calculando las ecs. de transformación para el filtro %s' % band1)
+    print('con el color (%s - %s)...' % (band1, band2))
 
-Mi1 = table['Mi'].data
-eMi1 = table['eMi'].data
+    Id = table['Id'].data
+    X = table['X'].data
 
-Mc1 = table[band1].data
-eMc1 = table['e%s' % band2].data
+    Mi1 = table['Mi'].data
+    eMi1 = table['eMi'].data
 
-Mc2 = table[band2].data
-eMc2 = table['e%s' % band2].data
+    Mc1 = table[band1].data
+    eMc1 = table['e%s' % band2].data
 
-My = Mc1 - Mi1
-eMy = np.sqrt(eMc1 ** 2 + eMi1 ** 2)
+    Mc2 = table[band2].data
+    eMc2 = table['e%s' % band2].data
 
-C = Mc1 - Mc2
-eC = np.sqrt(eMc1 ** 2 + eMc2 ** 2)
+    My = Mc1 - Mi1
+    eMy = np.sqrt(eMc1 ** 2 + eMi1 ** 2)
 
-mean, quantiles = getTransformation(My, eMy, X, C, eC, band1, band2, Id)
+    C = Mc1 - Mc2
+    eC = np.sqrt(eMc1 ** 2 + eMc2 ** 2)
 
-k = mean[0]
-ek = np.mean(abs(quantiles[0] - k))
+    mean, quantiles = getTransformation(My, eMy, X, C, eC, band1, band2, Id)
 
-a = mean[1]
-ea = np.mean(abs(quantiles[1] - a))
+    k = mean[0]
+    ek = np.mean(abs(quantiles[0] - k))
 
-b = mean[2]
-eb = np.mean(abs(quantiles[2] - b))
+    a = mean[1]
+    ea = np.mean(abs(quantiles[1] - a))
 
-print('k(%s) = %.4f ± %.4f' % (band1, k, ek,))
+    b = mean[2]
+    eb = np.mean(abs(quantiles[2] - b))
 
-print('a(%s, %s) = %.4f ± %.4f' % (band1, band2, a, ea,))
+    print('k(%s) = %.4f ± %.4f' % (band1, k, ek,))
 
-print('b(%s, %s) = %.4f ± %.4f' % (band1, band2, b, eb,))
+    print('a(%s, %s) = %.4f ± %.4f' % (band1, band2, a, ea,))
+
+    print('b(%s, %s) = %.4f ± %.4f' % (band1, band2, b, eb,))
